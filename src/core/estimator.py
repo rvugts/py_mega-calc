@@ -101,19 +101,14 @@ class Estimator:
             transformed_value = input_value * (math.log(max(1, input_value)) ** 2)
             predicted = self._linear_regression_predict(transformed_inputs, times, transformed_value)
         elif calc_type == 'primes':
-            # Primes: density-based, roughly linear in search space
-            # However, for very large inputs, use a more conservative estimate
-            # Prime calculation time grows roughly as n * log(n) for nth prime
-            predicted = self._linear_regression_predict(inputs, times, input_value)
-            # For primes, if the target is much larger than benchmark inputs, apply scaling
-            max_benchmark_input = max(inputs) if inputs else input_value
-            if input_value > max_benchmark_input * 10:
-                # Scale up more conservatively for very large inputs
-                # Use the largest benchmark point and scale by log ratio
-                if max_benchmark_input > 0:
-                    log_ratio = math.log(input_value / max_benchmark_input)
-                    # Apply additional scaling factor for primes
-                    predicted = predicted * (1 + log_ratio * 0.5)
+            # Primes: Estimate based on average density 1/ln(N) per spec
+            # Prime number theorem: density of primes around N is ~1/ln(N)
+            # To find Nth prime, need to check ~N*ln(N) numbers
+            # So time scales as T(n) ∝ n * ln(n)
+            # Transform: transformed = n * ln(n), fit linear
+            transformed_inputs = [n * math.log(max(1, n)) for n in inputs]
+            transformed_value = input_value * math.log(max(1, input_value))
+            predicted = self._linear_regression_predict(transformed_inputs, times, transformed_value)
         else:
             # Default: simple linear regression
             predicted = self._linear_regression_predict(inputs, times, input_value)
