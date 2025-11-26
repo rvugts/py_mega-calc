@@ -1,0 +1,229 @@
+---
+alwaysApply: true
+---
+# Strict Test-Driven Development (TDD) Workflow
+
+## Overview
+This rule enforces a **strict Test-Driven Development (TDD)** workflow for every single code generation task in the `py_mega_calc` project. No exceptions.
+
+## 1. Enforcement Rule
+**CRITICAL:** You (the AI) are **FORBIDDEN** from writing implementation code (logic) until a failing test case has been written and confirmed.
+
+### What This Means:
+- ❌ **DO NOT** write `def calculate_by_index(...)` until there's a test that calls it and fails
+- ❌ **DO NOT** write algorithm logic until tests define the expected behavior
+- ✅ **DO** write the test first, run it, confirm it fails for the right reason
+- ✅ **DO** then write the minimum implementation to make it pass
+
+## 2. The Red-Green-Refactor Cycle
+
+You must strictly follow this cycle for **every feature**:
+
+### RED Phase: Write Failing Test
+1. Write a comprehensive unit test using `pytest` that tests the desired functionality
+2. The test **MUST fail** because the feature doesn't exist yet
+3. Run the test: `pytest tests/path/to/test_file.py -v`
+4. Confirm the test fails with a clear, expected error (e.g., `AttributeError`, `NotImplementedError`)
+5. **Only proceed to GREEN phase after confirming the test fails**
+
+### GREEN Phase: Make Test Pass
+1. Write the **minimum amount of code** required to make the test pass
+2. No premature optimization
+3. No extra features
+4. Just enough to satisfy the test
+5. Run the test again: `pytest tests/path/to/test_file.py -v`
+6. Confirm the test passes
+
+### REFACTOR Phase: Optimize
+1. Once the test passes, optimize the code:
+   - Clean up code style (PEP 8)
+   - Improve performance
+   - Apply DRY principles
+   - Add type hints
+   - Improve docstrings
+2. **After each refactoring step, run the test again**
+3. Ensure the test still passes
+4. If the test breaks, revert and try a different refactoring approach
+
+## 3. Tooling Requirements
+
+### Testing Framework
+- **Primary:** `pytest` for all tests
+- Run tests with: `pytest tests/ -v` or `pytest tests/path/to/test_file.py::test_function_name -v`
+- Use pytest fixtures for setup/teardown
+
+### Mocking
+- Use `unittest.mock` (or `pytest-mock`) for isolating dependencies
+- Mock external resources (file I/O, system calls, etc.)
+- Mock time-dependent operations for consistent testing
+
+### Shared Fixtures
+- Use `tests/conftest.py` for shared fixtures
+- Define reusable test data and setup logic there
+- Import fixtures in test files as needed
+
+## 4. Test File Structure
+
+Test files **MUST** mirror the source directory structure:
+
+```
+src/calculators/fibonacci.py  →  tests/test_fibonacci.py
+src/calculators/factorial.py  →  tests/test_factorial.py
+src/calculators/primes.py     →  tests/test_primes.py
+src/core/resource_manager.py  →  tests/test_resources.py
+src/core/estimator.py         →  tests/test_estimator.py
+```
+
+### Naming Conventions
+- Test files: `test_<module_name>.py`
+- Test functions: `test_<function_name>_<scenario>()`
+- Test classes: `Test<ClassName>`
+
+### Example Structure
+```python
+# tests/test_fibonacci.py
+import pytest
+from src.calculators.fibonacci import FibonacciCalculator
+
+class TestFibonacciCalculator:
+    def test_calculate_by_index_zero(self):
+        """Test that index 0 returns the first Fibonacci number."""
+        calc = FibonacciCalculator()
+        result = calc.calculate_by_index(0)
+        assert result == 0
+    
+    def test_calculate_by_index_large(self):
+        """Test calculation for large indices."""
+        # ... test implementation
+```
+
+## 5. Documentation Updates
+
+**After a test passes**, you **MUST** update `docs/IMPLEMENTATION_STATUS.md`:
+
+1. Mark the corresponding task as complete: `[x]`
+2. Mark tests as passing: `[x]`
+3. Add notes about implementation details or decisions
+4. Update the commit message to reference the status update
+
+### Example Update
+```markdown
+| **Fib**   | Fast Doubling Algo | [x] | [x] | Implemented with O(log n) complexity |
+```
+
+## 6. Edge Cases and Boundary Conditions
+
+Tests **MUST** explicitly cover:
+
+### Input Validation
+- Negative numbers → Should raise `InputError`
+- Zero → Define expected behavior
+- Non-integers → Should raise `InputError`
+- Very large numbers → Test resource limits
+
+### Resource Limits
+- Memory limit (24GB) → Test `ResourceExhaustedError`
+- Time limit (5 minutes) → Test `TimeoutError`
+- Large digit outputs (>10,000 digits) → Test estimation logic
+
+### Boundary Conditions
+- Minimum valid input (e.g., index 0, 1 digit)
+- Maximum practical input (within resource constraints)
+- Edge cases specific to each calculator:
+  - **Fibonacci:** F(0), F(1), large n
+  - **Factorial:** 0!, 1!, very large n
+  - **Primes:** First prime, large primes, prime gaps
+
+### Example Edge Case Tests
+```python
+def test_calculate_by_index_negative_raises_error(self):
+    """Test that negative index raises InputError."""
+    calc = FibonacciCalculator()
+    with pytest.raises(InputError):
+        calc.calculate_by_index(-1)
+
+def test_calculate_exceeds_memory_limit(self):
+    """Test that exceeding 24GB memory raises ResourceExhaustedError."""
+    # ... test implementation
+```
+
+## 7. Test Quality Standards
+
+### Coverage Requirements
+- **100% code coverage** for logic (as per spec)
+- Use `pytest-cov` to verify: `pytest --cov=src --cov-report=term-missing`
+
+### Test Assertions
+- Use descriptive assertion messages
+- Test one thing per test function
+- Use `pytest.raises()` for exception testing
+- Use `pytest.approx()` for floating-point comparisons (if needed, though we use integers)
+
+### Gold Standard Values
+- Include verified values from OEIS (Online Encyclopedia of Integer Sequences)
+- Test known large number calculations
+- Verify against authoritative sources
+
+## 8. Workflow Checklist
+
+Before writing any implementation code, verify:
+
+- [ ] Test file exists in correct location
+- [ ] Test function is written and comprehensive
+- [ ] Test is run and **fails** (RED phase confirmed)
+- [ ] Error message is clear and expected
+- [ ] Only then: Write minimum implementation code
+- [ ] Run test again and confirm it **passes** (GREEN phase)
+- [ ] Refactor if needed, ensuring test still passes
+- [ ] Update `docs/IMPLEMENTATION_STATUS.md`
+- [ ] Run full test suite: `pytest tests/ -v`
+- [ ] Check coverage: `pytest --cov=src --cov-report=term-missing`
+
+## 9. Violations and Corrections
+
+If you catch yourself writing implementation before tests:
+
+1. **STOP immediately**
+2. Delete the implementation code
+3. Write the test first
+4. Confirm it fails
+5. Then write the implementation
+
+## 10. Example Complete TDD Cycle
+
+### Step 1: RED - Write Failing Test
+```python
+# tests/test_fibonacci.py
+def test_calculate_by_index_zero():
+    calc = FibonacciCalculator()
+    assert calc.calculate_by_index(0) == 0
+```
+Run: `pytest tests/test_fibonacci.py::test_calculate_by_index_zero -v`
+**Expected:** `AttributeError` or `NotImplementedError` ✅
+
+### Step 2: GREEN - Make Test Pass
+```python
+# src/calculators/fibonacci.py
+class FibonacciCalculator(Calculator):
+    def calculate_by_index(self, n: int) -> int:
+        return 0  # Minimum to pass
+```
+Run: `pytest tests/test_fibonacci.py::test_calculate_by_index_zero -v`
+**Expected:** Test passes ✅
+
+### Step 3: REFACTOR - Optimize
+```python
+# src/calculators/fibonacci.py
+class FibonacciCalculator(Calculator):
+    def calculate_by_index(self, n: int) -> int:
+        """Calculate nth Fibonacci number using Fast Doubling Method."""
+        if n == 0:
+            return 0
+        # ... full implementation
+```
+Run: `pytest tests/test_fibonacci.py -v`
+**Expected:** All tests still pass ✅
+
+---
+
+**Remember:** TDD is not optional. Every feature must follow this cycle.
