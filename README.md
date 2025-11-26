@@ -32,7 +32,7 @@ pip install -r requirements.txt
 ## Usage
 
 ```bash
-python -m src.main [calculator_type] [options]
+python3 -m src.main [calculator_type] [options]
 ```
 
 ### Calculator Types
@@ -55,52 +55,52 @@ python -m src.main [calculator_type] [options]
 
 ```bash
 # Calculate 10th Fibonacci number (F(10) = 55)
-python -m src.main fib --index 10
+python3 -m src.main fib --index 10
 
 # Find first Fibonacci number with 3 digits
-python -m src.main fib --min-digits 3
+python3 -m src.main fib --min-digits 3
 
 # Calculate with benchmark estimation
-python -m src.main fib --index 100 --benchmark
+python3 -m src.main fib --index 100 --benchmark
 
 # Dry run to estimate time without calculating
-python -m src.main fib --index 1000 --dry-run
+python3 -m src.main fib --index 1000 --dry-run
 ```
 
 ### Factorial Calculations
 
 ```bash
 # Calculate 5! = 120
-python -m src.main fact --index 5
+python3 -m src.main fact --index 5
 
 # Find first factorial with 4 digits
-python -m src.main fact --min-digits 4
+python3 -m src.main fact --min-digits 4
 
 # Calculate with strict time limit enforcement
-python -m src.main fact --index 1000 --strict
+python3 -m src.main fact --index 1000 --strict
 ```
 
 ### Prime Number Calculations
 
 ```bash
 # Calculate 10th prime number (29)
-python -m src.main prime --index 10
+python3 -m src.main prime --index 10
 
 # Find first prime with 5 digits (10007)
-python -m src.main prime --min-digits 5
+python3 -m src.main prime --min-digits 5
 
 # Calculate with benchmark and strict mode
-python -m src.main prime --index 1000 --benchmark --strict
+python3 -m src.main prime --index 1000 --benchmark --strict
 ```
 
 ### Combined Flags
 
 ```bash
 # Run benchmark, estimate time, and enforce strict limits
-python -m src.main fib --index 500 --benchmark --strict
+python3 -m src.main fib --index 500 --benchmark --strict
 
 # Dry run with benchmark for large calculation
-python -m src.main fact --index 10000 --benchmark --dry-run
+python3 -m src.main fact --index 10000 --benchmark --dry-run
 ```
 
 ## Output
@@ -185,7 +185,3 @@ This project follows strict **Test-Driven Development (TDD)** principles:
 All code changes must include comprehensive tests.
 
 See `docs/spec.md` for full specification.
-
-## License
-
-[To be determined]

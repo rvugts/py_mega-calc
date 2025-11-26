@@ -41,6 +41,7 @@ class Estimator:
                 calculation_func(input_val)
                 end_time = time.perf_counter()
                 execution_time = end_time - start_time
+                # Always add results, even if very small (for regression to work)
                 results.append((input_val, execution_time))
             except Exception:
                 # Skip inputs that cause errors
@@ -101,13 +102,28 @@ class Estimator:
             predicted = self._linear_regression_predict(transformed_inputs, times, transformed_value)
         elif calc_type == 'primes':
             # Primes: density-based, roughly linear in search space
-            # Use simple linear regression on input values
+            # However, for very large inputs, use a more conservative estimate
+            # Prime calculation time grows roughly as n * log(n) for nth prime
             predicted = self._linear_regression_predict(inputs, times, input_value)
+            # For primes, if the target is much larger than benchmark inputs, apply scaling
+            max_benchmark_input = max(inputs) if inputs else input_value
+            if input_value > max_benchmark_input * 10:
+                # Scale up more conservatively for very large inputs
+                # Use the largest benchmark point and scale by log ratio
+                if max_benchmark_input > 0:
+                    log_ratio = math.log(input_value / max_benchmark_input)
+                    # Apply additional scaling factor for primes
+                    predicted = predicted * (1 + log_ratio * 0.5)
         else:
             # Default: simple linear regression
             predicted = self._linear_regression_predict(inputs, times, input_value)
         
         # Ensure prediction is positive and reasonable
+        # For very small predictions (< 0.001), use a minimum threshold based on input size
+        if predicted < 0.001 and input_value > 1000:
+            # For large inputs, ensure minimum estimate
+            predicted = max(0.001, predicted)
+        
         return max(0.0, predicted)
     
     def _linear_regression_predict(self, x_values: List[float], y_values: List[float], x_predict: float) -> float:
