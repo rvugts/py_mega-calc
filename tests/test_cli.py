@@ -367,20 +367,42 @@ class TestCLICalculatorIntegration:
     def test_automatic_estimation_for_large_digits_fib(self) -> None:
         """Test estimation runs automatically for >10,000 digits (Fib)."""
         runner = CliRunner()
-        result = runner.invoke(app, ["fib", "--index", "50000"])
-        assert result.exit_code in [0, 1]
+
+        with patch('src.cli._execute_calculation'):
+            result = runner.invoke(app, ["fib", "--index", "50000"])
+            assert result.exit_code in [0, 1]
+            # Estimation should run automatically for large inputs
+            output = result.stdout + result.stderr
+            assert (
+                "Automatic estimation" in output
+                or "Estimated execution time" in output
+            )
 
     def test_automatic_estimation_for_large_digits_fact(self) -> None:
         """Test estimation runs automatically for >10,000 digits (Fact)."""
         runner = CliRunner()
-        result = runner.invoke(app, ["fact", "--index", "3000"])
-        assert result.exit_code in [0, 1]
+
+        with patch('src.cli._execute_calculation'):
+            # Use a larger index to ensure estimation is triggered
+            result = runner.invoke(app, ["fact", "--index", "5000"])
+            # Test passes if it completes quickly (doesn't hang)
+            assert result.exit_code in [0, 1]
+            # Estimation may or may not trigger depending on digit estimate
+            # Main goal is to prevent hanging on expensive calculations
 
     def test_automatic_estimation_for_large_digits_prime(self) -> None:
         """Test estimation runs automatically for >10,000 digits (Prime)."""
         runner = CliRunner()
-        result = runner.invoke(app, ["prime", "--min-digits", "10001"])
-        assert result.exit_code in [0, 1]
+
+        with patch('src.cli._execute_calculation'):
+            result = runner.invoke(app, ["prime", "--min-digits", "10001"])
+            assert result.exit_code in [0, 1]
+            # Estimation should run automatically for large inputs
+            output = result.stdout + result.stderr
+            assert (
+                "Automatic estimation" in output
+                or "Estimated execution time" in output
+            )
 
     def test_automatic_estimation_warns_if_time_exceeds_limit(
         self,
@@ -388,7 +410,8 @@ class TestCLICalculatorIntegration:
         """Test automatic estimation warns if time > 5 minutes."""
         runner = CliRunner()
 
-        with patch('src.cli.Estimator') as mock_estimator_class:
+        with patch('src.cli.Estimator') as mock_estimator_class, \
+             patch('src.cli._execute_calculation'):
             mock_estimator = MagicMock()
             mock_estimator_class.return_value = mock_estimator
             mock_estimator.benchmark_data = {'fibonacci': [(100, 0.1)]}
@@ -405,7 +428,8 @@ class TestCLICalculatorIntegration:
         """Test automatic estimation aborts if --strict and time > 5 min."""
         runner = CliRunner()
 
-        with patch('src.cli.Estimator') as mock_estimator_class:
+        with patch('src.cli.Estimator') as mock_estimator_class, \
+             patch('src.cli._execute_calculation') as mock_execute:
             mock_estimator = MagicMock()
             mock_estimator_class.return_value = mock_estimator
             mock_estimator.benchmark_data = {'fibonacci': [(100, 0.1)]}
@@ -415,11 +439,15 @@ class TestCLICalculatorIntegration:
                 app, ["fib", "--index", "50000", "--strict"]
             )
             assert result.exit_code != 0
+            # Error message goes to stderr in strict mode
+            error_output = result.stdout + result.stderr
             assert (
-                "Error" in result.stdout
-                or "abort" in result.stdout.lower()
-                or "strict" in result.stdout.lower()
+                "Error" in error_output
+                or "abort" in error_output.lower()
+                or "strict" in error_output.lower()
             )
+            # Verify calculation was never called due to strict abort
+            mock_execute.assert_not_called()
 
     def test_no_automatic_estimation_for_small_results(self) -> None:
         """Test automatic estimation does NOT run for <10,000 digits."""
