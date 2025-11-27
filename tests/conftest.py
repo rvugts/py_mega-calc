@@ -1,4 +1,8 @@
-"""Pytest configuration and shared fixtures."""
+"""Pytest configuration and shared fixtures.
 
-# TODO: Add shared fixtures for testing
+This module provides shared pytest fixtures and configuration for all
+test modules.
 
+Dependencies:
+    - pytest: Testing framework
+"""
