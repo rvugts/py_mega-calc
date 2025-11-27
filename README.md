@@ -12,7 +12,7 @@ A high-performance, pure Python command-line application designed to calculate e
 - **Resource Management**: Automatic monitoring of RAM (24GB limit) and execution time (5-minute limit)
 - **Precision**: 100% integer arithmetic, no floating-point errors
 - **Benchmarking**: Built-in estimator for predicting calculation times
-- **Comprehensive Testing**: 208 tests with 86% code coverage
+- **Comprehensive Testing**: 235 tests with 86% code coverage
 
 ## Installation
 
